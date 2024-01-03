@@ -13,7 +13,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.9]
 
     steps:
     - uses: actions/checkout@v3
@@ -38,23 +38,30 @@ jobs:
     #     # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
     #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     # Setup sonar-scanner
-    - name: Setup SonarQube
-      uses: warchant/setup-sonar-scanner@v7
-    # Run sonar-scanner
+    # - name: Setup SonarQube
+    #   uses: warchant/setup-sonar-scanner@v7
+    # # Run sonar-scanner
+    # - name: SonarQube Scan
+    #   run: sonar-scanner
+    #        -Dsonar.host.url=${{ secrets.SONAR_URL }}
+    #        -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+    #        -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+    #        -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+    #        -Dsonar.sources=$GITHUB_WORKSPACE
+    
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: SonarQube Scan
-      run: sonar-scanner
-           -Dsonar.host.url=${{ secrets.SONAR_URL }}
-           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-           -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-           -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-           -Dsonar.sources=$GITHUB_WORKSPACE
+      uses: sonarsource/sonarqube-scan-action@master
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
  # Check the Quality Gate status.
     - name: SonarQube Quality Gate check
       id: sonarqube-quality-gate-check
       uses: sonarsource/sonarqube-quality-gate-action@master
-      with:
-        scanMetadataReportFile: target/sonar/report-task.txt
       # Force to fail step after specific time.
       timeout-minutes: 5
       env:
