@@ -13,17 +13,22 @@ pipeline {
                 source venv/bin/activate
                 pip install --upgrade pip
                 pip install -r requirements.txt
+                '''
             }
-}
-
+        }
         stage('Run Tests') {
             steps {
-                sh 'python manage.py test'
+                sh '''
+                source venv/bin/activate
+                python manage.py test
+                '''
             }
         }
         stage('Build Artifact') {
             steps {
-                sh 'tar -czf projectapplication.tar.gz *'
+                sh '''
+                tar -czf projectapplication.tar.gz *
+                '''
                 archiveArtifacts artifacts: 'projectapplication.tar.gz', fingerprint: true
             }
         }
