@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git clone https://github.com/appmigro/ProjectApplication.git
+                git url: 'https://github.com/appmigro/ProjectApplication.git'
             }
         }
         stage('Install Dependencies') {
@@ -21,7 +21,6 @@ pipeline {
                 sh 'tar -czf projectapplication.tar.gz *'
                 archiveArtifacts artifacts: 'projectapplication.tar.gz', fingerprint: true
             }
-          }
         }
     }
 }
