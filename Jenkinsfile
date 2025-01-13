@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                checkout scm
+                git clone https://github.com/appmigro/ProjectApplication.git
             }
         }
         stage('Install Dependencies') {
