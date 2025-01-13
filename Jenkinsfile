@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    triggers {
+        githubPush() // Listens for GitHub webhook events
+    }
     stages {
         stage('Clone Repository') {
             steps {
@@ -10,7 +13,7 @@ pipeline {
             steps {
                 sh '''
                 python3 -m venv venv
-                . venv/bin/activate
+                source venv/bin/activate
                 pip install --upgrade pip
                 pip install -r requirements.txt
                 '''
@@ -18,17 +21,12 @@ pipeline {
         }
         stage('Run Tests') {
             steps {
-                sh '''
-                . venv/bin/activate
-                python manage.py test
-                '''
+                sh 'python manage.py test'
             }
         }
         stage('Build Artifact') {
             steps {
-                sh '''
-                tar -czf projectapplication.tar.gz *
-                '''
+                sh 'tar -czf projectapplication.tar.gz *'
                 archiveArtifacts artifacts: 'projectapplication.tar.gz', fingerprint: true
             }
         }
