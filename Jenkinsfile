@@ -1,7 +1,7 @@
 pipeline {
     agent any
     triggers {
-        githubPush() // Listens for GitHub webhook 
+        githubPush() // Listens for GitHub webhook
     }
     stages {
         stage('Clone Repository') {
@@ -37,13 +37,16 @@ pipeline {
         }
         stage('Upload to Nexus') {
             steps {
-                withCredentials([string(credentialsId: 'nexus-credentials', variable: 'NEXUS_TOKEN')]) {
-                    sh '''
-                    ls -lh projectapplication.tar.gz
-                    curl -v -u admin:$NEXUS_TOKEN --upload-file projectapplication.tar.gz \
-                    http://35.224.113.227:8081/repository/python-artifacts/projectapplication.tar.gz
-                    '''
-                }
+                nexusArtifactUploader(
+                    nexusVersion: 'nexus3',
+                    protocol: 'http',
+                    nexusUrl: '35.224.113.227:8081',
+                    groupId: 'com.appmigro',
+                    version: '1.0.0',
+                    repository: 'python-artifacts',
+                    credentialsId: 'nexus-credentials',
+                    artifacts: [[artifactId: 'projectapplication', file: 'projectapplication.tar.gz', type: 'tar.gz']]
+                )
             }
         }
     }
