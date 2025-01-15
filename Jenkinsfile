@@ -39,7 +39,8 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'nexus-credentials', variable: 'NEXUS_TOKEN')]) {
                     sh '''
-                    curl -u admin:$NEXUS_TOKEN --upload-file projectapplication.tar.gz \
+                    ls -lh projectapplication.tar.gz
+                    curl -v -u admin:$NEXUS_TOKEN --upload-file projectapplication.tar.gz \
                     http://35.224.113.227:8081/repository/python-artifacts/projectapplication.tar.gz
                     '''
                 }
