@@ -17,7 +17,7 @@ pipeline {
                 '''
             }
         }
-        stage('Run Tests') {
+        stage('Run Tests and tomorrow we will do Artifactory') {
             steps {
                 sh '''
                     . venv/bin/activate
