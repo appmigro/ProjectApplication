@@ -28,7 +28,7 @@ pipeline {
         stage('Build Artifact') {
             steps {
                 sh '''
-                    tar -czvf projectapplication.tar.gz 
+                    tar -czf projectapplication.tar.gz *
                 '''
                 archiveArtifacts artifacts: 'projectapplication.tar.gz', fingerprint: true
             }
