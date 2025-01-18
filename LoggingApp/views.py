@@ -7,4 +7,4 @@ logger = logging.getLogger('main')
 
 def login_view(request):
     logger.info('You accessed this page at '+str(datetime.datetime.now())+' hours!')
-    return HttpResponse("<h1>Welcome to Appmigro, Enjoy your stay . We hope you get the best of luck</h1>")
+    return HttpResponse("<h1>Welcome to Appmigro, Enjoy your stay.</h1>")
