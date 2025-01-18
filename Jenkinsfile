@@ -46,7 +46,7 @@ pipeline {
                     artifacts: [
                         [
                             artifactId: 'projectapplication',
-                            file: "projectapplication-1.0.0.tar.gz",
+                            file: "projectapplication.tar.gz",
                             type: 'tar.gz'
                         ]
                     ]
