@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git url: 'https://github.com/appmigro/ProjectApplication.git', branch:'main', credentialsId: 'github-credentials'  
+                git url: 'https://github.com/appmigro/ProjectApplication.git', branch: 'main', credentialsId: 'github-credentials'
             }
         }
         stage('Install Dependencies') {
@@ -36,19 +36,21 @@ pipeline {
         stage('Upload Artifact To Nexus') {
             steps {
                 nexusArtifactUploader(
-                        nexusVersion: 'nexus3',
-                        protocol: 'http',
-                        nexusUrl: 'http://34.31.71.82:8081',
-                        groupId: 'com.appmigro',
-                        version: '1.0.0',
-                        repository: 'python_artifacts',
-                        credentialsId: 'nexus-credentials',
-                        artifacts: [
-                            [artifactId: 'projectapplication',
-                             file: 'projectapplication' + version + 'projectapplication.tar.gz',
-                             type: 'tar.gz']
+                    nexusVersion: 'nexus3',
+                    protocol: 'http',
+                    nexusUrl: 'http://34.31.71.82:8081',
+                    groupId: 'com.appmigro',
+                    version: '1.0.0',
+                    repository: 'python_artifacts',
+                    credentialsId: 'nexus-credentials',
+                    artifacts: [
+                        [
+                            artifactId: 'projectapplication',
+                            file: "projectapplication-1.0.0.tar.gz",
+                            type: 'tar.gz'
                         ]
-            )
+                    ]
+                )
             }
         }
     }
