@@ -17,12 +17,20 @@ pipeline {
                 '''
             }
         }
-        stage('Run Tests and tomorrow we will do Artifactory') {
+        stage('Run Tests') {
             steps {
                 sh '''
                     . venv/bin/activate
                     python manage.py test
                 '''
+            }
+        }
+        stage('Build Artifact') {
+            steps {
+                sh '''
+                    tar -czf projectapplication.tar.gz
+                '''
+                archiveArtifacts artifacts: 'projectapplication.tar.gz', fingerprint: true
             }
         }
     }
