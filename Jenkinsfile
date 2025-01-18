@@ -35,23 +35,31 @@ pipeline {
         }
         stage('Upload Artifact To Nexus') {
             steps {
-                nexusArtifactUploader(
-                    nexusVersion: 'nexus3',
-                    protocol: 'http',
-                    nexusUrl: '34.31.71.82:8081',
-                    groupId: 'com.appmigro',
-                    version: '2.0.0',
-                    repository: 'python_artifacts',
-                    credentialsId: 'nexus-credentials',
-                    artifacts: [
-                        [
-                            artifactId: 'projectapplication',
-                            file: "projectapplication.tar.gz",
-                            type: 'tar.gz'
+                script {
+                    // Generate a version dynamically based on the build number or commit hash
+                    def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    def buildNumber = env.BUILD_NUMBER ?: '1'
+                    def version = "1.0.${buildNumber}-${commitHash}"
+
+                    nexusArtifactUploader(
+                        nexusVersion: 'nexus3',
+                        protocol: 'http',
+                        nexusUrl: '34.31.71.82:8081',
+                        groupId: 'com.appmigro',
+                        version: version,
+                        repository: 'python_artifacts',
+                        credentialsId: 'nexus-credentials',
+                        artifacts: [
+                            [
+                                artifactId: 'projectapplication',
+                                file: "projectapplication.tar.gz",
+                                type: 'tar.gz'
+                            ]
                         ]
-                    ]
-                )
+                    )
+                }
             }
         }
+
     }
 }
