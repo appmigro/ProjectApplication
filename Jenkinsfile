@@ -33,5 +33,23 @@ pipeline {
                 archiveArtifacts artifacts: 'projectapplication.tar.gz', fingerprint: true
             }
         }
+        stage('Upload Artifact To Nexus') {
+            steps {
+                nexusArtifactUploader(
+                        nexusVersion: 'nexus3',
+                        protocol: 'http',
+                        nexusUrl: 'http://34.31.71.82:8081',
+                        groupId: 'com.appmigro',
+                        version: 1.0.0,
+                        repository: 'python_artifacts',
+                        credentialsId: 'nexus-credentials',
+                        artifacts: [
+                            [artifactId: projectapplication,
+                             file: 'projectapplication' + version + 'projectapplication.tar.gz',
+                             type: 'tar.gz']
+                        ]
+     )
+            }
+        }
     }
 }
