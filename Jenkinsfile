@@ -38,7 +38,7 @@ pipeline {
                 nexusArtifactUploader(
                     nexusVersion: 'nexus3',
                     protocol: 'http',
-                    nexusUrl: 'http://34.31.71.82:8081',
+                    nexusUrl: '34.31.71.82:8081',
                     groupId: 'com.appmigro',
                     version: '1.0.0',
                     repository: 'python_artifacts',
