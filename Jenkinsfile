@@ -33,6 +33,20 @@ pipeline {
                 archiveArtifacts artifacts: 'projectapplication.tar.gz', fingerprint: true
             }
         }
+
+        stage("build & SonarQube analysis") {
+            agent any
+            steps {
+              withSonarQubeEnv('SonarCloud') {
+                script {
+                    def scannerhome = tool 'SonarScanner'
+                    sh """
+                    ${scannerhome}/bin/sonar-scanner 
+                    """   
+                }
+              }
+            }
+          }
         
         stage('Upload Artifact To Nexus') {
             steps {
@@ -45,7 +59,7 @@ pipeline {
                     nexusArtifactUploader(
                         nexusVersion: 'nexus3',
                         protocol: 'http',
-                        nexusUrl: '34.31.71.82:8081',
+                        nexusUrl: '104.154.93.254:8081',
                         groupId: 'com.appmigro',
                         version: version,
                         repository: 'python_artifacts',
