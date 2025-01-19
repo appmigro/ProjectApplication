@@ -33,18 +33,7 @@ pipeline {
                 archiveArtifacts artifacts: 'projectapplication.tar.gz', fingerprint: true
             }
         }
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarCloud') { // Use the configured SonarQube installation name
-                    script {
-                        def scannerHome = tool 'SonarScanner' // Use the scanner name defined in the global tool configuration
-                        sh """
-                        ${scannerHome}/bin/sonar-scanner
-                        """
-                    }
-                }
-            }
-        }
+        
         stage('Upload Artifact To Nexus') {
             steps {
                 script {
