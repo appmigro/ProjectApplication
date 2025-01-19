@@ -35,10 +35,13 @@ pipeline {
         }
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarCloud') {
-                    sh '''
-                    sonar-scanner
-                    '''
+                withSonarQubeEnv('SonarCloud') { // Use the configured SonarQube installation name
+                    script {
+                        def scannerHome = tool 'SonarScanner' // Use the scanner name defined in the global tool configuration
+                        sh """
+                        ${scannerHome}/bin/sonar-scanner
+                        """
+                    }
                 }
             }
         }
