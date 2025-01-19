@@ -33,6 +33,15 @@ pipeline {
                 archiveArtifacts artifacts: 'projectapplication.tar.gz', fingerprint: true
             }
         }
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarCloud') {
+                    sh '''
+                    sonar-scanner
+                    '''
+                }
+            }
+        }
         stage('Upload Artifact To Nexus') {
             steps {
                 script {
