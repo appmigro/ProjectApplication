@@ -7,6 +7,7 @@ pipeline {
                 git url: 'https://github.com/appmigro/ProjectApplication.git', branch: 'main', credentialsId: 'github-credentials'
             }
         }
+
         stage('Install Dependencies') {
             steps {
                 sh '''
@@ -17,6 +18,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Run Tests') {
             steps {
                 sh '''
@@ -25,6 +27,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Build Artifact') {
             steps {
                 sh '''
@@ -34,24 +37,23 @@ pipeline {
             }
         }
 
-        stage("build & SonarQube analysis") {
+        stage("Build & SonarQube Analysis") {
             agent any
             steps {
-              withSonarQubeEnv('SonarCloud') {
-                script {
-                    def scannerhome = tool 'SonarScanner'
-                    sh """
-                    ${scannerhome}/bin/sonar-scanner 
-                    """   
+                withSonarQubeEnv('SonarCloud') {
+                    script {
+                        def scannerhome = tool 'SonarScanner'
+                        sh """
+                        ${scannerhome}/bin/sonar-scanner 
+                        """   
+                    }
                 }
-              }
             }
-          }
-        
+        }
+
         stage('Upload Artifact To Nexus') {
             steps {
                 script {
-                    // Generate a version dynamically based on the build number or commit hash
                     def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                     def buildNumber = env.BUILD_NUMBER ?: '1'
                     def version = "1.0.${buildNumber}-${commitHash}"
@@ -59,7 +61,7 @@ pipeline {
                     nexusArtifactUploader(
                         nexusVersion: 'nexus3',
                         protocol: 'http',
-                        nexusUrl: '104.154.93.254:8081',
+                        nexusUrl: '34.55.243.101:8081',
                         groupId: 'com.appmigro',
                         version: version,
                         repository: 'python_artifacts',
@@ -76,5 +78,27 @@ pipeline {
             }
         }
 
+        stage('Deploy to GCP VM') {
+            steps {
+                script {
+                    def gcp_vm_ip = "34.56.46.158" // Replace with your actual GCP VM public IP
+                    def deploy_dir = "/home/fabunmibukola77/"
+                    def nexus_url = "http://34.55.243.101:8081/repository/python_artifacts/com/appmigro/projectapplication"
+                    def version = "1.0.${env.BUILD_NUMBER}"  // Ensure this matches the version uploaded
+
+                    // Deploy steps
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ubuntu@${gcp_vm_ip} << EOF
+                            cd ${deploy_dir}
+                            wget ${nexus_url}/${version}/projectapplication.tar.gz -O projectapplication.tar.gz
+                            tar -xzf projectapplication.tar.gz
+                            source venv/bin/activate
+                            pip install -r requirements.txt
+                            sudo systemctl restart gunicorn.socket
+                        EOF
+                    """
+                }
+            }
+        }
     }
 }
