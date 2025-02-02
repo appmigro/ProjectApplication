@@ -81,8 +81,8 @@ pipeline {
         stage('Deploy to GCP VM') {
             steps {
                 script {
-                    def gcp_vm_name = "target-vm-name" // Replace with your GCP VM name
-                    def gcp_vm_zone = "us-central1-a" // Update with your GCP zone
+                    def gcp_vm_name = "nginx" // Replace with your GCP VM name
+                    def gcp_vm_zone = "us-central1-c " // Update with your GCP zone
                     def deploy_dir = "/home/fabunmibukola77/"
                     def nexus_url = "http://34.55.243.101:8081/repository/python_artifacts/com/appmigro/projectapplication"
                     def version = "1.0.${env.BUILD_NUMBER}" // Ensure this matches the Nexus version
@@ -90,7 +90,7 @@ pipeline {
                     withCredentials([file(credentialsId: 'gcp-sa-key', variable: 'GCP_KEY')]) {
                         sh """
                             gcloud auth activate-service-account --key-file=$GCP_KEY
-                            gcloud config set project your-gcp-project
+                            gcloud config set project ordinal-env-441601-p3
 
                             # Copy artifact to GCP VM
                             gcloud compute scp projectapplication.tar.gz ${gcp_vm_name}:${deploy_dir} --zone=${gcp_vm_zone}
