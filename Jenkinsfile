@@ -88,7 +88,7 @@ pipeline {
 
                     // Deploy steps
                     sh """
-                        ssh -tt -o StrictHostKeyChecking=no fabunmibukola77@${gcp_vm_ip} << EOF
+                        ssh -T -o StrictHostKeyChecking=no fabunmibukola77@${gcp_vm_ip} << EOF
                             cd ${deploy_dir}
                             wget ${nexus_url}/${version}/projectapplication.tar.gz -O projectapplication.tar.gz
                             tar -xzf projectapplication.tar.gz
