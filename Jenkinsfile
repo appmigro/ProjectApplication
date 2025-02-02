@@ -43,9 +43,9 @@ pipeline {
                 withSonarQubeEnv('SonarCloud') {
                     script {
                         def scannerhome = tool 'SonarScanner'
-                        sh """
-                        ${scannerhome}/bin/sonar-scanner 
-                        """   
+                        sh '''
+                        ${scannerhome}/bin/sonar-scanner
+                        '''   
                     }
                 }
             }
@@ -81,22 +81,23 @@ pipeline {
         stage('Deploy to GCP VM') {
             steps {
                 script {
-                    def gcp_vm_ip = "34.56.46.158" // Replace with your actual GCP VM public IP
+                    def gcp_vm_ip = "34.56.46.158"
                     def deploy_dir = "/home/fabunmibukola77/"
                     def nexus_url = "http://34.55.243.101:8081/repository/python_artifacts/com/appmigro/projectapplication"
-                    def version = "1.0.${env.BUILD_NUMBER}"  // Ensure this matches the version uploaded
+                    def version = "1.0.${env.BUILD_NUMBER}"
 
-                    // Deploy steps
-                    sh """
-                        ssh -T -o StrictHostKeyChecking=no fabunmibukola77@${gcp_vm_ip} << EOF
-                            cd ${deploy_dir}
-                            wget ${nexus_url}/${version}/projectapplication.tar.gz -O projectapplication.tar.gz
-                            tar -xzf projectapplication.tar.gz
-                            source venv/bin/activate
-                            pip install -r requirements.txt
-                            sudo systemctl restart gunicorn.socket
-                        EOF
-                    """
+                    withCredentials([sshUserPrivateKey(credentialsId: 'gcp-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                        sh '''
+                            ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no fabunmibukola77@34.56.46.158 << EOF
+                                cd /home/fabunmibukola77/
+                                wget http://34.55.243.101:8081/repository/python_artifacts/com/appmigro/projectapplication/1.0.$BUILD_NUMBER/projectapplication.tar.gz -O projectapplication.tar.gz
+                                tar -xzf projectapplication.tar.gz
+                                source venv/bin/activate
+                                pip install -r requirements.txt
+                                sudo systemctl restart gunicorn.socket
+                            EOF
+                        '''
+                    }
                 }
             }
         }
