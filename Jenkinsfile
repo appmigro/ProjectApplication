@@ -83,8 +83,7 @@ pipeline {
                 script {
                     def gcp_vm_name = "nginx" // Replace with your GCP VM name
                     def gcp_vm_zone = "us-central1-c" // Update with your GCP zone
-                    // def deploy_dir = "/tmp/ProjectApplication/"
-                    def deploy_dir = "/home/fabunmibukola77/ProjectApplication/"
+                    def deploy_dir = "/tmp/ProjectApplication/"
                     def nexus_url = "http://34.55.243.101:8081/repository/python_artifacts/com/appmigro/projectapplication"
                     def version = "1.0.${env.BUILD_NUMBER}" // Ensure this matches the Nexus version
 
