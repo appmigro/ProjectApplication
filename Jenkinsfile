@@ -81,7 +81,7 @@ pipeline {
         stage('Deploy to GCP VM') {
             steps {
                 script {
-                    def gcp_vm_ip = "34.56.46.158" // Replace with your actual GCP VM external IP
+                    def gcp_vm_name = "nginx" // Replace with your GCP VM name
                     def gcp_vm_zone = "us-central1-c" // Update with your GCP zone
                     def deploy_dir = "/home/fabunmibukola77/"
                     def nexus_url = "http://34.55.243.101:8081/repository/python_artifacts/com/appmigro/projectapplication"
@@ -92,11 +92,11 @@ pipeline {
                             gcloud auth activate-service-account --key-file=$GCP_KEY
                             gcloud config set project ordinal-env-441601-p3
 
-                            # Copy artifact to GCP VM using explicit IP
-                            gcloud compute scp projectapplication.tar.gz fabunmibukola77@${gcp_vm_ip}:${deploy_dir} --zone=${gcp_vm_zone}
+                            # Copy artifact to GCP VM
+                            gcloud compute scp projectapplication.tar.gz ${gcp_vm_name}:${deploy_dir} --zone=${gcp_vm_zone}
 
-                            # Deploy on VM using explicit IP
-                            gcloud compute ssh fabunmibukola77@${gcp_vm_ip} --zone=${gcp_vm_zone} --command="
+                            # Deploy on VM
+                            gcloud compute ssh ${gcp_vm_name} --zone=${gcp_vm_zone} --command="
                                 cd ${deploy_dir}
                                 tar -xzf projectapplication.tar.gz
                                 source venv/bin/activate
