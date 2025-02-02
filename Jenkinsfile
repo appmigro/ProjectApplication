@@ -43,9 +43,9 @@ pipeline {
                 withSonarQubeEnv('SonarCloud') {
                     script {
                         def scannerhome = tool 'SonarScanner'
-                        sh '''
-                        ${scannerhome}/bin/sonar-scanner
-                        '''   
+                        sh """
+                        ${scannerhome}/bin/sonar-scanner 
+                        """   
                     }
                 }
             }
@@ -81,22 +81,29 @@ pipeline {
         stage('Deploy to GCP VM') {
             steps {
                 script {
-                    def gcp_vm_ip = "34.56.46.158"
+                    def gcp_vm_name = "target-vm-name" // Replace with your GCP VM name
+                    def gcp_vm_zone = "us-central1-a" // Update with your GCP zone
                     def deploy_dir = "/home/fabunmibukola77/"
                     def nexus_url = "http://34.55.243.101:8081/repository/python_artifacts/com/appmigro/projectapplication"
-                    def version = "1.0.${env.BUILD_NUMBER}"
+                    def version = "1.0.${env.BUILD_NUMBER}" // Ensure this matches the Nexus version
 
-                    withCredentials([sshUserPrivateKey(credentialsId: 'gcp-ssh-key', keyFileVariable: 'SSH_KEY')]) {
-                        sh '''
-                            ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no fabunmibukola77@34.56.46.158 << EOF
-                                cd /home/fabunmibukola77/
-                                wget http://34.55.243.101:8081/repository/python_artifacts/com/appmigro/projectapplication/1.0.$BUILD_NUMBER/projectapplication.tar.gz -O projectapplication.tar.gz
+                    withCredentials([file(credentialsId: 'gcp-sa-key', variable: 'GCP_KEY')]) {
+                        sh """
+                            gcloud auth activate-service-account --key-file=$GCP_KEY
+                            gcloud config set project your-gcp-project
+
+                            # Copy artifact to GCP VM
+                            gcloud compute scp projectapplication.tar.gz ${gcp_vm_name}:${deploy_dir} --zone=${gcp_vm_zone}
+
+                            # Deploy on VM
+                            gcloud compute ssh ${gcp_vm_name} --zone=${gcp_vm_zone} --command="
+                                cd ${deploy_dir}
                                 tar -xzf projectapplication.tar.gz
                                 source venv/bin/activate
                                 pip install -r requirements.txt
                                 sudo systemctl restart gunicorn.socket
-                            EOF
-                        '''
+                            "
+                        """
                     }
                 }
             }
