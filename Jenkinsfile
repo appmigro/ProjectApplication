@@ -87,16 +87,16 @@ pipeline {
                     def version = "1.0.${env.BUILD_NUMBER}"
 
                     withCredentials([sshUserPrivateKey(credentialsId: 'gcp-ssh-key', keyFileVariable: 'SSH_KEY')]) {
-                        sh """
-                            ssh -i $SSH_KEY -o StrictHostKeyChecking=no fabunmibukola77@${gcp_vm_ip} << EOF
-                                cd ${deploy_dir}
-                                wget ${nexus_url}/${version}/projectapplication.tar.gz -O projectapplication.tar.gz
+                        sh '''
+                            ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no fabunmibukola77@'"${gcp_vm_ip}"' << EOF
+                                cd '"${deploy_dir}"'
+                                wget '"${nexus_url}"'/'"${version}"'/projectapplication.tar.gz -O projectapplication.tar.gz
                                 tar -xzf projectapplication.tar.gz
                                 source venv/bin/activate
                                 pip install -r requirements.txt
                                 sudo systemctl restart gunicorn.socket
                             EOF
-                        """
+                        '''
                     }
                 }
             }
