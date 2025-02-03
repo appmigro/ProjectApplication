@@ -79,34 +79,73 @@ pipeline {
         }
 
         stage('Deploy to GCP VM') {
-            steps {
-                script {
-                    def gcp_vm_name = "nginx" // Replace with your GCP VM name
-                    def gcp_vm_zone = "us-central1-c" // Update with your GCP zone
-                    def deploy_dir = "/tmp/ProjectApplication/"
-                    def nexus_url = "http://34.55.243.101:8081/repository/python_artifacts/com/appmigro/projectapplication"
-                    def version = "1.0.${env.BUILD_NUMBER}" // Ensure this matches the Nexus version
+    steps {
+        script {
+            def gcp_vm_name = "nginx" // Replace with your GCP VM name
+            def gcp_vm_zone = "us-central1-c" // Update with your GCP zone
+            def deploy_dir = "/opt/ProjectApplication/"
+            def gunicorn_service = "/etc/systemd/system/gunicorn.service"
 
-                    withCredentials([file(credentialsId: 'gcp-sa-key', variable: 'GCP_KEY')]) {
-                        sh """
-                            gcloud auth activate-service-account --key-file=$GCP_KEY
-                            gcloud config set project ordinal-env-441601-p3
+            withCredentials([file(credentialsId: 'gcp-sa-key', variable: 'GCP_KEY')]) {
+                sh """
+                    gcloud auth activate-service-account --key-file=$GCP_KEY
+                    gcloud config set project ordinal-env-441601-p3
 
-                            # Copy artifact to GCP VM
-                            gcloud compute scp projectapplication.tar.gz ${gcp_vm_name}:${deploy_dir} --zone=${gcp_vm_zone}
+                    # Copy artifact to GCP VM
+                    gcloud compute scp projectapplication.tar.gz ${gcp_vm_name}:${deploy_dir} --zone=${gcp_vm_zone}
 
-                            # Deploy on VM
-                            gcloud compute ssh ${gcp_vm_name} --zone=${gcp_vm_zone} --command="
-                                cd ${deploy_dir}
-                                tar -xzf projectapplication.tar.gz
-                                source venv/bin/activate
-                                pip install -r requirements.txt
-                                sudo systemctl restart gunicorn.socket
-                            "
-                        """
-                    }
+                    # Deploy on VM
+                    gcloud compute ssh ${gcp_vm_name} --zone=${gcp_vm_zone} --command="
+                        # Install dependencies if missing
+                        sudo apt update
+                        sudo apt install -y python3-pip python3-venv gunicorn nginx
+
+                        # Navigate to deploy directory
+                        cd ${deploy_dir}
+
+                        # Extract and set up virtual environment
+                        tar -xzf projectapplication.tar.gz
+                        python3 -m venv venv
+                        source venv/bin/activate
+                        pip install -r requirements.txt
+
+                        # Set Gunicorn systemd service
+                        echo '[Unit]
+                        Description=Gunicorn Daemon for Django
+                        After=network.target
+
+                        [Service]
+                        User=www-data
+                        Group=www-data
+                        WorkingDirectory=${deploy_dir}
+                        ExecStart=${deploy_dir}venv/bin/gunicorn --workers 3 --bind unix:/run/gunicorn.sock projectapplication.wsgi:application
+
+                        [Install]
+                        WantedBy=multi-user.target' | sudo tee ${gunicorn_service}
+
+                        # Reload and enable Gunicorn service
+                        sudo systemctl daemon-reload
+                        sudo systemctl enable gunicorn
+                        sudo systemctl restart gunicorn
+
+                        # Set Nginx reverse proxy
+                        echo 'server {
+                            listen 80;
+                            server_name _;
+
+                            location / {
+                                include proxy_params;
+                                proxy_pass http://unix:/run/gunicorn.sock;
+                            }
+                        }' | sudo tee /etc/nginx/sites-available/projectapplication
+
+                        # Enable Nginx site config
+                        sudo ln -sf /etc/nginx/sites-available/projectapplication /etc/nginx/sites-enabled
+                        sudo systemctl restart nginx
+                    "
+                """
                 }
-            }
-        }
+             }
+          }
+       }
     }
-}
