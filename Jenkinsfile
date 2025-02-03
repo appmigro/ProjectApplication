@@ -82,7 +82,7 @@ pipeline {
                 script {
                     def gcp_vm_name = "nginx" // Replace with your GCP VM name
                     def gcp_vm_zone = "us-central1-c" // Update with your GCP zone
-                    def deploy_dir = "/opt/ProjectApplication/"
+                    def deploy_dir = "/tmp/ProjectApplication/"
                     def gunicorn_service = "/etc/systemd/system/gunicorn.service"
 
                     withCredentials([file(credentialsId: 'gcp-sa-key', variable: 'GCP_KEY')]) {
