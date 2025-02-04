@@ -80,15 +80,22 @@ pipeline {
         stage('Deploy to GCP VM') {
             steps {
                 script {
-                    def gcp_vm_name = "nginx" // Replace with your GCP VM name
-                    def gcp_vm_zone = "us-central1-c" // Update with your GCP zone
-                    def deploy_dir = "/tmp/ProjectApplication/"
+                    def gcp_vm_name = "nginx"
+                    def gcp_vm_zone = "us-central1-c"
+                    def deploy_dir = "/home/fabunmibukola77/ProjectApplication/"
                     def gunicorn_service = "/etc/systemd/system/gunicorn.service"
 
                     withCredentials([file(credentialsId: 'gcp-sa-key', variable: 'GCP_KEY')]) {
                         sh """
                             gcloud auth activate-service-account --key-file=$GCP_KEY
                             gcloud config set project ordinal-env-441601-p3
+
+                            # Ensure deployment directory exists with correct ownership
+                            gcloud compute ssh ${gcp_vm_name} --zone=${gcp_vm_zone} --command="
+                                mkdir -p ${deploy_dir}
+                                sudo chown -R \$USER:\$USER ${deploy_dir}
+                                sudo chmod -R 755 ${deploy_dir}
+                            "
 
                             # Copy artifact to GCP VM
                             gcloud compute scp projectapplication.tar.gz ${gcp_vm_name}:${deploy_dir} --zone=${gcp_vm_zone}
@@ -99,10 +106,6 @@ pipeline {
                                 sudo apt update
                                 sudo apt install -y python3-pip python3-venv gunicorn nginx
 
-                                # Ensure deployment directory exists
-                                sudo mkdir -p ${deploy_dir}
-                                sudo chown -R www-data:www-data ${deploy_dir}
-
                                 # Navigate to deploy directory
                                 cd ${deploy_dir}
 
@@ -112,14 +115,18 @@ pipeline {
                                 source venv/bin/activate
                                 pip install -r requirements.txt
 
+                                # Ensure correct permissions
+                                sudo chown -R \$USER:\$USER ${deploy_dir}
+                                sudo chmod -R 755 ${deploy_dir}
+
                                 # Set Gunicorn systemd service
                                 echo '[Unit]
                                 Description=Gunicorn Daemon for Django
                                 After=network.target
 
                                 [Service]
-                                User=www-data
-                                Group=www-data
+                                User=\$USER
+                                Group=\$USER
                                 WorkingDirectory=${deploy_dir}
                                 ExecStart=${deploy_dir}/venv/bin/gunicorn --workers 3 --bind unix:/run/gunicorn.sock projectapplication.wsgi:application
 
