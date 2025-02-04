@@ -84,6 +84,7 @@ pipeline {
                     def gcp_vm_zone = "us-central1-c"
                     def deploy_dir = "/home/fabunmibukola77/ProjectApplication/"
                     def gunicorn_service = "/etc/systemd/system/gunicorn.service"
+                    def gunicorn_socket = "${deploy_dir}/gunicorn.sock"
 
                     withCredentials([file(credentialsId: 'gcp-sa-key', variable: 'GCP_KEY')]) {
                         sh """
@@ -119,7 +120,7 @@ pipeline {
                                 sudo chown -R \$USER:\$USER ${deploy_dir}
                                 sudo chmod -R 755 ${deploy_dir}
 
-                                # Set Gunicorn systemd service
+                                # Set Gunicorn systemd service with updated socket location
                                 echo '[Unit]
                                 Description=Gunicorn Daemon for Django
                                 After=network.target
@@ -128,7 +129,7 @@ pipeline {
                                 User=\$USER
                                 Group=\$USER
                                 WorkingDirectory=${deploy_dir}
-                                ExecStart=${deploy_dir}/venv/bin/gunicorn --workers 3 --bind unix:/run/gunicorn.sock projectapplication.wsgi:application
+                                ExecStart=${deploy_dir}/venv/bin/gunicorn --workers 3 --bind unix:${gunicorn_socket} projectapplication.wsgi:application
 
                                 [Install]
                                 WantedBy=multi-user.target' | sudo tee ${gunicorn_service}
@@ -138,14 +139,14 @@ pipeline {
                                 sudo systemctl enable gunicorn
                                 sudo systemctl restart gunicorn
 
-                                # Set Nginx reverse proxy
+                                # Set Nginx reverse proxy with updated socket path
                                 echo 'server {
                                     listen 80;
                                     server_name _;
 
                                     location / {
                                         include proxy_params;
-                                        proxy_pass http://unix:/run/gunicorn.sock;
+                                        proxy_pass http://unix:${gunicorn_socket};
                                     }
                                 }' | sudo tee /etc/nginx/sites-available/projectapplication
 
